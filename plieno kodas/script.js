@@ -4,20 +4,56 @@ const languageButtons = document.querySelectorAll("[data-lang]");
 const languageCurrent = document.querySelector(".language-current");
 const textNodes = [];
 
+function loadLazyVideos() {
+  const lazyVideos = document.querySelectorAll("video[data-src]");
+  if (!lazyVideos.length) return;
+
+  const loadVideo = (video) => {
+    if (video.dataset.loaded === "true") return;
+
+    const source = document.createElement("source");
+    source.src = video.dataset.src;
+    source.type = "video/mp4";
+    video.appendChild(source);
+    video.dataset.loaded = "true";
+    video.load();
+
+    const playPromise = video.play();
+    if (playPromise) {
+      playPromise.catch(() => {});
+    }
+  };
+
+  if (!("IntersectionObserver" in window)) {
+    lazyVideos.forEach(loadVideo);
+    return;
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        loadVideo(entry.target);
+        observer.unobserve(entry.target);
+      });
+    },
+    { rootMargin: "300px 0px" }
+  );
+
+  lazyVideos.forEach((video) => observer.observe(video));
+}
+
 const heroSlides = {
   lt: [
     { kicker: "Tikslūs metalo sprendimai", title: "Lazerinis pjovimas ir plieno konstrukcijos", cta: "Pateikti užklausą", href: "/pateikti-uzsakyma/" },
-    { kicker: "Nuo idėjos iki montavimo", title: "Angarai, karkasai ir nestandartiniai gaminiai", cta: "Susisiekite", href: "/susisiekite/" },
     { kicker: "Atlikti darbai", title: "Peržiūrėkite įgyvendintus projektus", cta: "Įgyvendinti projektai", href: "/igyvendinti-projektai/" },
   ],
   en: [
     { kicker: "Precise metal solutions", title: "Laser cutting and steel structures", cta: "Submit request", href: "/pateikti-uzsakyma/" },
-    { kicker: "From idea to installation", title: "Hangars, frames and custom metalwork", cta: "Contact us", href: "/susisiekite/" },
     { kicker: "Completed work", title: "View completed projects", cta: "Completed projects", href: "/igyvendinti-projektai/" },
   ],
   ru: [
     { kicker: "Точные решения из металла", title: "Лазерная резка и стальные конструкции", cta: "Отправить запрос", href: "/pateikti-uzsakyma/" },
-    { kicker: "От идеи до монтажа", title: "Ангары, каркасы и нестандартные изделия", cta: "Связаться", href: "/susisiekite/" },
     { kicker: "Выполненные работы", title: "Посмотрите реализованные проекты", cta: "Выполненные проекты", href: "/igyvendinti-projektai/" },
   ],
 };
@@ -52,11 +88,13 @@ const translations = {
     "Pasiūlymas": "Offer",
     "Gamyba": "Production",
     "Montavimas": "Installation",
+    "Pristatymas klientui": "Delivery to the client",
     "Pradėkime": "Let us start",
     "nuo brėžinio arba idėjos": "from a drawing or an idea",
     "Vardas": "Name",
     "Kontaktas": "Contact",
-    "Paruošti užklausą": "Prepare request",
+    "Paruošti užklausą": "Send request",
+    "Išsiųsti užklausą": "Send request",
     "Apie mus": "About us",
     "MB Plieno kodas": "MB Plieno kodas",
     "Vertybės": "Values",
@@ -73,7 +111,7 @@ const translations = {
     "Parašykite mums": "Write to us",
     "Žinutė": "Message",
     "Siųsti užklausą": "Send request",
-    "Telefonas: +370 621 41440": "Phone: +370 621 41440",
+    "Telefonas: +370 626 51688": "Phone: +370 626 51688",
     "El. paštas: info@plienokodas.lt": "Email: info@plienokodas.lt",
     "Adresas: Alyvų g. 13, LT-40112 Kupiškis": "Address: Alyvų st. 13, LT-40112 Kupiškis",
     "Metalo konstrukcijos | Angarai | Montavimas": "Steel structures | Hangars | Installation",
@@ -108,7 +146,8 @@ const translations = {
     "Parenkame konstrukcinį sprendimą, medžiagas ir pateikiame sąmatą.": "We select the structural solution, materials and provide an estimate.",
     "Gaminame konstrukcijas, tikriname mazgus ir ruošiame pristatymui.": "We manufacture structures, inspect nodes and prepare for delivery.",
     "Atvykstame į objektą, sumontuojame konstrukciją ir perduodame rezultatą.": "We arrive on site, install the structure and hand over the result.",
-    "Parašykite, kokios konstrukcijos reikia, kokie matmenys ir kur bus objektas. Užklausą galėsite išsiųsti per savo el. pašto programą.": "Write what structure you need, its dimensions and where the project is located. The request will open in your email app.",
+    "Paruoštus gaminius pristatome klientui, suderiname perdavimą ir atsakome į paskutinius klausimus.": "We deliver the finished products to the client, coordinate handover and answer final questions.",
+    "Parašykite, kokios konstrukcijos reikia, kokie matmenys ir kur bus objektas.": "Write what structure you need, its dimensions and where the project is located.",
     "Esame metalo konstrukcijų, angarų karkasų ir nestandartinių plieno gaminių komanda. Dirbame su aiškiu tikslu: pasiūlyti praktišką, tvirtą ir tvarkingai įgyvendintą sprendimą kiekvienam objektui.": "We are a team working with steel structures, hangar frames and custom steel products. Our goal is to deliver a practical, strong and properly executed solution for every project.",
     "Tikslumas, atsakomybė ir atviras bendravimas. Mums svarbu, kad užsakovas suprastų sprendimą, terminus ir darbų eigą dar prieš pradedant gamybą.": "Precision, responsibility and clear communication. We make sure the client understands the solution, timing and workflow before production begins.",
     "Kurti metalo konstrukcijas, kurios patikimai tarnauja kasdienėje veikloje ir padeda greičiau įgyvendinti statybos, gamybos ar ūkio projektus.": "To create steel structures that serve reliably in everyday work and help construction, production and farming projects move faster.",
@@ -149,7 +188,7 @@ const translations = {
     "Metalo platforma su laiptų konstrukcija ir saugiais atraminiais elementais.": "Metal platform with stair structure and safe support elements.",
     "Susisiekite dėl metalo konstrukcijų, angarų, montavimo darbų ar nestandartinių gaminių.": "Contact us about steel structures, hangars, installation work or custom products.",
     "Trumpai aprašykite poreikį, o mes atsakysime dėl galimo sprendimo, terminų ir kainos gairių.": "Briefly describe your need and we will respond about a possible solution, timing and price range.",
-    "15+ metų patirtis": "15+ years experience",
+    "10+ metų patirtis": "10+ years experience",
     "Profesionalumas": "Professionalism",
     "Aiškūs terminai": "Clear deadlines",
     "Tvirti sprendimai": "Strong solutions",
@@ -190,11 +229,13 @@ const translations = {
     "Pasiūlymas": "Предложение",
     "Gamyba": "Производство",
     "Montavimas": "Монтаж",
+    "Pristatymas klientui": "Доставка клиенту",
     "Pradėkime": "Начнем",
     "nuo brėžinio arba idėjos": "с чертежа или идеи",
     "Vardas": "Имя",
     "Kontaktas": "Контакт",
-    "Paruošti užklausą": "Подготовить запрос",
+    "Paruošti užklausą": "Отправить запрос",
+    "Išsiųsti užklausą": "Отправить запрос",
     "MB Plieno kodas": "MB Plieno kodas",
     "Vertybės": "Ценности",
     "Misija": "Миссия",
@@ -210,7 +251,7 @@ const translations = {
     "Parašykite mums": "Напишите нам",
     "Žinutė": "Сообщение",
     "Siųsti užklausą": "Отправить запрос",
-    "Telefonas: +370 621 41440": "Телефон: +370 621 41440",
+    "Telefonas: +370 626 51688": "Телефон: +370 626 51688",
     "El. paštas: info@plienokodas.lt": "Email: info@plienokodas.lt",
     "Adresas: Alyvų g. 13, LT-40112 Kupiškis": "Адрес: Alyvų g. 13, LT-40112 Kupiškis",
     "Metalo konstrukcijos | Angarai | Montavimas": "Металлоконструкции | Ангары | Монтаж",
@@ -245,7 +286,8 @@ const translations = {
     "Parenkame konstrukcinį sprendimą, medžiagas ir pateikiame sąmatą.": "Подбираем конструктивное решение, материалы и предоставляем смету.",
     "Gaminame konstrukcijas, tikriname mazgus ir ruošiame pristatymui.": "Изготавливаем конструкции, проверяем узлы и готовим к доставке.",
     "Atvykstame į objektą, sumontuojame konstrukciją ir perduodame rezultatą.": "Приезжаем на объект, монтируем конструкцию и передаем результат.",
-    "Parašykite, kokios konstrukcijos reikia, kokie matmenys ir kur bus objektas. Užklausą galėsite išsiųsti per savo el. pašto programą.": "Напишите, какая конструкция нужна, размеры и место объекта. Запрос откроется в вашей почтовой программе.",
+    "Paruoštus gaminius pristatome klientui, suderiname perdavimą ir atsakome į paskutinius klausimus.": "Доставляем готовые изделия клиенту, согласовываем передачу и отвечаем на финальные вопросы.",
+    "Parašykite, kokios konstrukcijos reikia, kokie matmenys ir kur bus objektas.": "Напишите, какая конструкция нужна, ее размеры и где находится объект.",
     "Esame metalo konstrukcijų, angarų karkasų ir nestandartinių plieno gaminių komanda. Dirbame su aiškiu tikslu: pasiūlyti praktišką, tvirtą ir tvarkingai įgyvendintą sprendimą kiekvienam objektui.": "Мы команда по металлоконструкциям, каркасам ангаров и нестандартным изделиям из стали. Наша цель — практичное, прочное и аккуратно реализованное решение для каждого объекта.",
     "Tikslumas, atsakomybė ir atviras bendravimas. Mums svarbu, kad užsakovas suprastų sprendimą, terminus ir darbų eigą dar prieš pradedant gamybą.": "Точность, ответственность и открытое общение. Нам важно, чтобы заказчик понимал решение, сроки и ход работ до начала производства.",
     "Kurti metalo konstrukcijas, kurios patikimai tarnauja kasdienėje veikloje ir padeda greičiau įgyvendinti statybos, gamybos ar ūkio projektus.": "Создавать металлоконструкции, которые надежно служат в повседневной работе и помогают быстрее реализовывать строительные, производственные и хозяйственные проекты.",
@@ -286,7 +328,7 @@ const translations = {
     "Metalo platforma su laiptų konstrukcija ir saugiais atraminiais elementais.": "Металлическая платформа с лестничной конструкцией и безопасными опорными элементами.",
     "Susisiekite dėl metalo konstrukcijų, angarų, montavimo darbų ar nestandartinių gaminių.": "Свяжитесь с нами по вопросам металлоконструкций, ангаров, монтажа или нестандартных изделий.",
     "Trumpai aprašykite poreikį, o mes atsakysime dėl galimo sprendimo, terminų ir kainos gairių.": "Кратко опишите потребность, и мы ответим по возможному решению, срокам и ориентиру цены.",
-    "15+ metų patirtis": "15+ лет опыта",
+    "10+ metų patirtis": "10+ лет опыта",
     "Profesionalumas": "Профессионализм",
     "Aiškūs terminai": "Понятные сроки",
     "Tvirti sprendimai": "Прочные решения",
@@ -304,7 +346,7 @@ const placeholderTranslations = {
   en: {
     "Jūsų vardas": "Your name",
     "Telefonas arba el. paštas": "Phone or email",
-    "Trumpai aprašykite objektą": "Briefly describe the project",
+    "Trumpai aprašykite idėją": "Briefly describe the idea",
     "Jūsų vardas arba įmonė": "Your name or company",
     "+370 ... arba el. paštas": "+370 ... or email",
     "Miestas arba adresas": "City or address",
@@ -314,7 +356,7 @@ const placeholderTranslations = {
   ru: {
     "Jūsų vardas": "Ваше имя",
     "Telefonas arba el. paštas": "Телефон или email",
-    "Trumpai aprašykite objektą": "Кратко опишите объект",
+    "Trumpai aprašykite idėją": "Кратко опишите идею",
     "Jūsų vardas arba įmonė": "Ваше имя или компания",
     "+370 ... arba el. paštas": "+370 ... или email",
     "Miestas arba adresas": "Город или адрес",
@@ -398,6 +440,7 @@ languageButtons.forEach((button) => {
 });
 
 applyLanguage(localStorage.getItem("plieno-kodas-lang") || "lt");
+loadLazyVideos();
 
 if (document.querySelector(".hero-rotator-text")) {
   setInterval(() => {
