@@ -1,5 +1,4 @@
 temp/
-server.ps1
 .vercel/
 .tools/
 *.zip
