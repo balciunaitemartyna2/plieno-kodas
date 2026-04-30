@@ -38,25 +38,29 @@ export default async function handler(request, response) {
     .map(([label, value]) => `<p><strong>${escapeHtml(label)}:</strong><br>${escapeHtml(value).replace(/\n/g, "<br>")}</p>`)
     .join("");
 
-  const resendResponse = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: process.env.FROM_EMAIL || "Plieno kodas <onboarding@resend.dev>",
-      to: TO_EMAIL,
-      reply_to: safeContact.includes("@") ? safeContact : undefined,
-      subject: "Nauja užklausa iš plienokodas.lt",
-      html: `<h2>Nauja užklausa</h2>${htmlRows}`,
-    }),
-  });
+  try {
+    const resendResponse = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: process.env.FROM_EMAIL || "Plieno kodas <onboarding@resend.dev>",
+        to: TO_EMAIL,
+        reply_to: safeContact.includes("@") ? safeContact : undefined,
+        subject: "Nauja užklausa iš plienokodas.lt",
+        html: `<h2>Nauja užklausa</h2>${htmlRows}`,
+      }),
+    });
 
-  if (!resendResponse.ok) {
-    const errorText = await resendResponse.text();
-    return response.status(502).json({ error: "Email provider error", details: errorText });
+    if (!resendResponse.ok) {
+      const errorText = await resendResponse.text();
+      return response.status(502).json({ error: "Email provider error", details: errorText });
+    }
+
+    return response.status(200).json({ ok: true });
+  } catch (error) {
+    return response.status(502).json({ error: "Email provider unreachable", details: error.message });
   }
-
-  return response.status(200).json({ ok: true });
 }

@@ -7,7 +7,7 @@ const textNodes = [];
 function getStoredLanguage() {
   try {
     return window.localStorage ? localStorage.getItem("plieno-kodas-lang") : null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -17,7 +17,9 @@ function setStoredLanguage(lang) {
     if (window.localStorage) {
       localStorage.setItem("plieno-kodas-lang", lang);
     }
-  } catch (error) {}
+  } catch {
+    /* storage unavailable - ignore */
+  }
 }
 
 function loadLazyVideos() {
@@ -113,7 +115,6 @@ const translations = {
     "Mūsų": "Our",
     "paslaugos": "services",
     "Ką mes siūlome": "What we offer",
-    "Angarų karkasai": "Hangar frames",
     "Metalo konstrukcijos": "Steel structures",
     "Karkasų gamyba": "Frame production",
     "Matmenys ir objektai": "Dimensions and objects",
@@ -136,8 +137,6 @@ const translations = {
     "Kontaktas": "Contact",
     "Paruošti užklausą": "Send request",
     "Išsiųsti užklausą": "Send request",
-    "Apie mus": "About us",
-    "MB Plieno kodas": "MB Plieno kodas",
     "Vertybės": "Values",
     "Misija": "Mission",
     "Vizija": "Vision",
@@ -159,7 +158,6 @@ const translations = {
     "Patikėkite metalo konstrukcijų darbus profesionalams.": "Entrust steel structure work to professionals.",
     "Kas mes": "Who we are",
     "Privatumo politika": "Privacy policy",
-    "MB Plieno kodas": "MB Plieno kodas",
     "Adresas:": "Address:",
     "Tel.:": "Tel.:",
     "El. paštas:": "Email:",
@@ -277,7 +275,6 @@ const translations = {
     "Kontaktas": "Контакт",
     "Paruošti užklausą": "Отправить запрос",
     "Išsiųsti užklausą": "Отправить запрос",
-    "MB Plieno kodas": "MB Plieno kodas",
     "Vertybės": "Ценности",
     "Misija": "Миссия",
     "Vizija": "Видение",
@@ -299,11 +296,9 @@ const translations = {
     "Patikėkite metalo konstrukcijų darbus profesionalams.": "Доверьте работы с металлоконструкциями профессионалам.",
     "Kas mes": "Кто мы",
     "Privatumo politika": "Политика конфиденциальности",
-    "MB Plieno kodas": "MB Plieno kodas",
     "Adresas:": "Адрес:",
     "Tel.:": "Тел.:",
     "El. paštas:": "Эл. почта:",
-    "Angarų karkasai": "Каркасы ангаров",
     "Lazerinis pjovimas": "Лазерная резка",
     "Suvirinimo darbai": "Сварочные работы",
     "Lazerinis apdirbimas": "Лазерная обработка",
@@ -504,10 +499,6 @@ forms.forEach((form) => {
     const service = data.get("service") ? data.get("service").toString().trim() : "";
     const place = data.get("place") ? data.get("place").toString().trim() : "";
     const message = data.get("message") ? data.get("message").toString().trim() : "Nenurodyta";
-    const extraRows = [
-      service ? `Paslauga: ${service}` : "",
-      place ? `Objekto vieta: ${place}` : "",
-    ].filter(Boolean).join("\n");
 
     const button = form.querySelector("button[type='submit']");
     const originalButtonText = button ? button.textContent : "";
@@ -521,7 +512,7 @@ forms.forEach((form) => {
 
     if (button) {
       button.disabled = true;
-      button.textContent = "Siunciama...";
+      button.textContent = "Siunčiama...";
     }
 
     status.textContent = "";
@@ -535,7 +526,7 @@ forms.forEach((form) => {
       const response = await fetch("/api/send-inquiry", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, contact, service, place, message, extraRows }),
+        body: JSON.stringify({ name, contact, service, place, message }),
       });
 
       if (!response.ok) {
@@ -543,10 +534,10 @@ forms.forEach((form) => {
       }
 
       form.reset();
-      status.textContent = "Uzklausa issiusta. Susisieksime per 24 valandas.";
+      status.textContent = "Užklausa išsiųsta. Susisieksime per 24 valandas.";
       status.classList.add("is-success");
-    } catch (error) {
-      status.textContent = "Nepavyko issiusti uzklausos. Bandykite dar karta arba rasykite tiesiogiai: kukyslukas@gmail.com";
+    } catch {
+      status.textContent = "Nepavyko išsiųsti užklausos. Bandykite dar kartą arba rašykite tiesiogiai: info@plienokodas.lt";
       status.classList.add("is-error");
     } finally {
       if (button) {
