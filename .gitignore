@@ -1,0 +1,6 @@
+temp/
+server.ps1
+.vercel/
+.tools/
+*.zip
+assets/images/plieno-kodas-logo.png
